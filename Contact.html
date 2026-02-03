@@ -1,0 +1,29 @@
+{% extends "Base.html" %}
+ 
+
+  {% block content %}
+    <h2>Contact Us</h2>
+    
+    
+    <form method="POST" action="{{ url_for('main.contact') }}">
+      <label for="name">Full Name</label>
+      <input type="text" name="name" id="name" required>
+
+      <label for="email">Email</label>
+      <input type="email" name="email" id="email" required>
+
+      <label for="message">Message</label>
+      <textarea name="message" id="message" rows="5" required></textarea>
+
+      <button type="submit">Send Message</button>
+    </form>
+  
+{% endblock %}
+        </div>
+    </div>
+        </div>
+        
+        <!-- INPUT SIDE -->
+        <div>
+            <h3 style="color: var(--color-primary); margin-bottom: 1.5rem; font-weight: 700;">1. Input Video</h3>
+            <div class="input-controls">    

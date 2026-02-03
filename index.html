@@ -1,0 +1,843 @@
+{% extends "base.html" %}
+
+{% block title %}VisionAssist AI - Homepage & Interactive Demo{% endblock %}
+
+{% block content %}
+<style>
+    .hero-section {
+        padding: 5rem 0;
+        text-align: center;
+    }
+    .hero-content {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .demo-container {
+        display: flex;
+        flex-direction: column;
+        gap: 3rem;
+        padding-bottom: 5rem;
+    }
+    .demo-card {
+        background-color: var(--color-card-dark);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        padding: 2.5rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    }
+    .input-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .output-box {
+        background-color: var(--color-base-dark);
+        border: 2px dashed var(--color-text-dim);
+        min-height: 250px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+    .action-button {
+        padding: 1rem;
+        font-weight: 600;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .action-button:hover {
+        transform: translateY(-2px);
+    }
+    #videoFeed {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto 1rem;
+        border-radius: 8px;
+        transform: scaleX(-1);
+        background-color: #333;
+        display: none;
+    }
+</style>
+
+<section class="hero-section">
+    <div class="hero-content">
+        <h1 style="font-size: 3.5rem; color: var(--color-primary);">VisionAssist AI Glasses</h1>
+        <p style="color: var(--color-text-dim); font-size: 1.5rem; margin-top: 0.5rem;">
+            "Seeing the World Through Sound" — Real-time guidance powered by Gemini.
+        </p>
+        <button onclick="document.getElementById('demo-section').scrollIntoView({ behavior: 'smooth' });" 
+                class="action-button" 
+                style="background-color: var(--color-primary); color: var(--color-text-light); border: none; margin-top: 2rem;">
+            Experience the Demo Now
+        </button>
+    </div>
+</section>
+
+<section id="demo-section" class="demo-container">
+    <h2 style="text-align: center; font-size: 2.5rem; color: var(--color-secondary);">Interactive Video Analysis</h2>
+    
+    <div class="demo-card" style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem;">
+        
+        <!-- INPUT SIDE -->
+        <div>
+            <h3 style="color: var(--color-primary); margin-bottom: 1.5rem; font-weight: 700;">1. Select Input Source</h3>
+            <div class="input-controls">
+
+                <video id="videoFeed" playsinline autoplay></video>
+                <canvas id="videoCanvas" style="display: none;"></canvas>
+
+                <label for="video-upload-input" style="color: var(--color-text-light);">Upload Video File</label>
+                <input type="file" id="video-upload-input" accept="video/*">
+
+                <button id="upload-btn" class="action-button" disabled 
+                        style="background-color: var(--color-secondary); color: white; opacity: 0.5;">
+                    Analyze Uploaded Video
+                </button>
+
+            <!-- GPS DETECTOR BUTTON -->
+<button onclick="openMapMode()"
+        class="action-button"
+        style="
+            background:#4bd80e;
+            color:white;
+            margin-top:10px;
+        ">
+    📍 GPS Detector / Map Mode
+</button>
+    
+
+                <!-- START VISION ASSIST BUTTON -->
+                <button onclick="startSimulation()" 
+                        class="action-button"
+                        style="background-color: #3b82f6; color: white;">
+                    Start Vision Assist
+                </button>
+
+                <video id="camera" width="350" autoplay playsinline 
+                       style="border-radius: 10px; display: none;"></video>
+
+                <div id="live-output"
+                     style="margin-top: 10px; font-size: 16px; color: white;">
+                </div>
+
+                <p id="live-status" style="color: var(--color-primary); text-align: center; font-weight: 600; display: none;">
+                    🔴 LIVE: Streaming and Analyzing...
+                </p>
+                
+            </div>
+        </div>
+       
+
+
+        <!-- OUTPUT SIDE -->
+        <div>
+            <h3 style="color: var(--color-primary); margin-bottom: 1.5rem; font-weight: 700;">2. AI Analysis & Audio Feedback</h3>
+            
+            <div id="output-box" class="output-box">
+                <p id="initial-msg" style="color: var(--color-text-dim);">Awaiting analysis data...</p>
+
+                <div id="loading-indicator" style="display: none; text-align: center;">
+                    <div class="loader"
+                         style="width: 40px; height: 40px; border: 4px solid rgba(56, 189, 248, 0.2); border-top-color: var(--color-primary); border-radius: 50%; margin: 0 auto; animation: spin 1s linear infinite;">
+                    </div>
+                    <p style="color: var(--color-primary); margin-top: 10px;">Processing Frame...</p>
+                </div>
+
+                <div id="results-display" style="display: none; width: 100%;">
+                    <h4 style="color: var(--color-secondary);">Detected Objects:</h4>
+                    <ul id="detection-list"></ul>
+                    
+                    <div style="padding: 1rem; background-color: var(--color-base-dark); border-radius: 6px;">
+                        <p style="font-weight: 600; color: var(--color-accent);">TTS Transcript:</p>
+                        <blockquote id="audio-text" style="color: var(--color-text-light); margin-top: 5px; font-style: italic;"></blockquote>
+                        <button id="tts-play-btn" class="action-button" 
+                                style="background-color: var(--color-accent); color: black;">
+                            ▶ Play Audio Feedback
+                        </button>
+                        <!-- Add this where you want rate limit info -->
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div id="rate-display" style="
+    background: rgba(59, 130, 246, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    margin: 10px 0;
+    font-size: 13px;
+">
+    <strong>📊 Rate Limit Status:</strong>
+    <div id="rate-info">Loading...</div>
+</div>
+</section>
+<script>
+
+let videoStream = null;
+let sending = false;
+let lastRequestTime = 0;
+const MIN_INTERVAL = 6000;
+let cameraTestInterval = null;
+
+// Main function to start camera and simulation
+async function startSimulation() {
+    if (sending) {
+        alert("Simulation is already running. Stop it first.");
+        return;
+    }
+    
+    const video = document.getElementById("camera");
+    const output = document.getElementById("live-output");
+    
+    try {
+        // Clear previous output
+        output.innerHTML = '<div style="color:#64748b; padding:10px;">🔄 Initializing camera...</div>';
+        
+        // Reset video element
+        video.srcObject = null;
+        video.style.display = "block";
+        
+        // Try different camera configurations
+        let constraints = {
+            video: {
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+                facingMode: { ideal: "user" }, // Start with front camera
+                frameRate: { ideal: 30 }
+            }
+        };
+        
+        console.log("🔍 Requesting camera access...");
+        
+        // Try to get camera stream
+        try {
+            videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+            console.log("✅ Camera access granted");
+        } catch (firstError) {
+            console.log("❌ Front camera failed, trying environment camera...");
+            
+            // Try back camera
+            constraints.video.facingMode = { ideal: "environment" };
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+                console.log("✅ Back camera access granted");
+            } catch (secondError) {
+                console.log("❌ All cameras failed, trying basic video...");
+                
+                // Try most basic request
+                constraints = { video: true };
+                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+                console.log("✅ Basic camera access granted");
+            }
+        }
+        
+        // Set video stream and wait for it to load
+        video.srcObject = videoStream;
+        
+        // Wait for video metadata to load
+        await new Promise((resolve, reject) => {
+            video.onloadedmetadata = () => {
+                console.log("✅ Video metadata loaded");
+                resolve();
+            };
+            
+            video.onerror = () => {
+                console.log("❌ Video error");
+                reject(new Error("Video failed to load"));
+            };
+            
+            // Timeout after 3 seconds
+            setTimeout(() => {
+                if (video.readyState >= 1) {
+                    resolve();
+                } else {
+                    reject(new Error("Video loading timeout"));
+                }
+            }, 3000);
+        });
+        
+        // Start video playback
+        video.play().catch(e => console.log("Play warning:", e));
+        
+        // Start camera brightness testing
+        startCameraTesting();
+        
+    } catch (err) {
+        console.error("Camera initialization error:", err);
+        output.innerHTML = `
+            <div style="color:#ef4444; padding:15px; background:rgba(239,68,68,0.1); border-radius:8px;">
+                <strong>❌ Camera Initialization Failed</strong><br>
+                <small>${err.message}</small><br><br>
+                <strong>Try these steps:</strong><br>
+                1. Refresh the page and allow camera access when prompted<br>
+                2. Make sure no other app is using the camera<br>
+                3. Check browser permissions (chrome://settings/content/camera)<br>
+                4. Try a different browser (Chrome/Firefox)<br>
+                5. Restart your computer if camera is in use by another app
+            </div>
+        `;
+        return;
+    }
+}
+
+// Function to continuously test camera brightness
+function startCameraTesting() {
+    const video = document.getElementById("camera");
+    const output = document.getElementById("live-output");
+    
+    if (cameraTestInterval) {
+        clearInterval(cameraTestInterval);
+    }
+    
+    let testCount = 0;
+    cameraTestInterval = setInterval(() => {
+        testCount++;
+        
+        // Create test canvas
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = 100;
+        canvas.height = 100;
+        
+        // Draw current video frame
+        try {
+            ctx.drawImage(video, 0, 0, 100, 100);
+            
+            // Get image data and calculate brightness
+            const imageData = ctx.getImageData(0, 0, 100, 100);
+            let totalBrightness = 0;
+            let pixelCount = 0;
+            
+            // Sample every 4th pixel for performance
+            for (let i = 0; i < imageData.data.length; i += 16) {
+                const r = imageData.data[i];
+                const g = imageData.data[i + 1];
+                const b = imageData.data[i + 2];
+                totalBrightness += (r + g + b) / 3;
+                pixelCount++;
+            }
+            
+            const avgBrightness = totalBrightness / pixelCount;
+            const brightnessPercent = Math.round((avgBrightness / 255) * 100);
+            
+            // Update debug display
+            const debugDiv = document.getElementById('camera-debug');
+            if (debugDiv) {
+                debugDiv.style.display = 'block';
+                debugDiv.innerHTML = `
+                    <strong>Camera Status:</strong> Active<br>
+                    <small>Brightness: ${Math.round(avgBrightness)}/255 (${brightnessPercent}%)<br>
+                    Resolution: ${video.videoWidth || 0}×${video.videoHeight || 0}<br>
+                    Test #${testCount}</small>
+                `;
+            }
+            
+            // Check if brightness is sufficient
+            if (avgBrightness > 30) {
+                // Brightness is GOOD - start simulation
+                clearInterval(cameraTestInterval);
+                cameraTestInterval = null;
+                
+                output.innerHTML = `
+                    <div style="color:#22c55e; padding:15px; background:rgba(34,197,94,0.2); border-radius:8px;">
+                        <strong>✅ Camera Ready!</strong><br>
+                        <small>Brightness: ${brightnessPercent}% | Starting Vision Assist...</small>
+                    </div>
+                `;
+                
+                // Start the main processing loop
+                sending = true;
+                lastRequestTime = 0;
+                processFrame();
+                
+            } else if (testCount >= 10) {
+                // After 10 tests, show specific guidance
+                clearInterval(cameraTestInterval);
+                cameraTestInterval = null;
+                
+                const suggestions = [
+                    "💡 Turn on room lights or open curtains",
+                    "☀️ Point camera toward a light source",
+                    "📱 If using phone, turn up screen brightness",
+                    "🧹 Clean the camera lens with a soft cloth",
+                    "🔄 Try switching between front and back camera",
+                    "🔌 Check if camera is covered or blocked"
+                ];
+                
+                output.innerHTML = `
+                    <div style="color:#f59e0b; padding:15px; background:rgba(245,158,11,0.2); border-radius:8px;">
+                        <strong>⚠️ Camera Too Dark (${brightnessPercent}%)</strong><br>
+                        <small>Current brightness: ${Math.round(avgBrightness)}/255</small><br><br>
+                        <strong>Quick Fixes:</strong><br>
+                        ${suggestions.map(s => `• ${s}<br>`).join('')}<br>
+                        <button onclick="retryCameraTest()" style="
+                            background:#3b82f6; 
+                            color:white; 
+                            padding:8px 16px; 
+                            border:none; 
+                            border-radius:6px; 
+                            cursor:pointer;
+                            font-weight:bold;
+                        ">
+                            🔄 Retry Camera Test
+                        </button>
+                    </div>
+                `;
+            } else {
+                // Still testing, show progress
+                output.innerHTML = `
+                    <div style="color:#f59e0b; padding:15px; background:rgba(245,158,11,0.1); border-radius:8px;">
+                        <strong>🔍 Testing Camera (${testCount}/10)</strong><br>
+                        <small>Brightness: ${brightnessPercent}% | Need > 12%</small><br><br>
+                        <em>Point camera at something bright like:</em><br>
+                        • A lamp or window<br>
+                        • Your phone screen (maximum brightness)<br>
+                        • A white wall or piece of paper
+                    </div>
+                `;
+            }
+            
+        } catch (error) {
+            console.log("Camera test error:", error);
+        }
+    }, 1000); // Test every second
+}
+
+// Retry camera testing
+function retryCameraTest() {
+    const output = document.getElementById("live-output");
+    output.innerHTML = '<div style="color:#64748b; padding:10px;">🔄 Restarting camera test...</div>';
+    startCameraTesting();
+}
+
+// Main frame processing function
+async function processFrame() {
+    if (!sending) return;
+    
+    const now = Date.now();
+    
+    // ENFORCE 60 SECOND INTERVAL
+    if (lastRequestTime > 0) {
+        const timeSinceLast = now - lastRequestTime;
+        if (timeSinceLast < MIN_INTERVAL) {
+            const waitSeconds = Math.ceil((MIN_INTERVAL - timeSinceLast) / 1000);
+            
+            const status = document.getElementById("live-status");
+            if (status) {
+                status.innerHTML = `⏳ Next analysis in ${waitSeconds}s`;
+                status.style.display = "block";
+            }
+            
+            // Check again in 1 second
+            setTimeout(processFrame, 1000);
+            return;
+        }
+    }
+    
+    const video = document.getElementById("camera");
+    const output = document.getElementById("live-output");
+    
+    try {
+        // Capture current frame
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Check brightness one more time
+        const testCanvas = document.createElement("canvas");
+        const testCtx = testCanvas.getContext("2d");
+        testCanvas.width = 100;
+        testCanvas.height = 100;
+        testCtx.drawImage(video, 0, 0, 100, 100);
+        const imageData = testCtx.getImageData(0, 0, 100, 100);
+        
+        let brightness = 0;
+        for (let i = 0; i < imageData.data.length; i += 4) {
+            brightness += (imageData.data[i] + imageData.data[i+1] + imageData.data[i+2]) / 3;
+        }
+        brightness /= (imageData.data.length / 4);
+        
+        // If still too dark, warn and retry later
+        if (brightness < 30) {
+            output.innerHTML = `
+                <div style="color:#f59e0b; padding:10px; background:rgba(245,158,11,0.1); border-radius:8px;">
+                    <strong>⚠️ Image Too Dark (${Math.round(brightness)}/255)</strong><br>
+                    <small>Improve lighting. Retrying in 10 seconds...</small>
+                </div>
+            `;
+            
+            // Wait 10 seconds and retry
+            setTimeout(processFrame, 10000);
+            return;
+        }
+        
+        // Convert to base64 for API
+        const frameBase64 = canvas.toDataURL("image/jpeg", 0.7);
+        
+        // Show loading indicator
+        document.getElementById("loading-indicator").style.display = "block";
+        document.getElementById("results-display").style.display = "none";
+        
+        const status = document.getElementById("live-status");
+        if (status) {
+            status.innerHTML = "🔴 Processing frame...";
+            status.style.display = "block";
+        }
+        
+        // Send to server
+        const response = await fetch("/api/analyze-frame", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image_data: frameBase64 })
+        });
+        
+        const data = await response.json();
+        lastRequestTime = Date.now();
+        
+        // Hide loading
+        document.getElementById("loading-indicator").style.display = "none";
+        
+        // Update UI with response
+        if (data.status === "quota_wait" || data.status === "ok") {
+            updateUI(data);
+            speakDescription(data.audioDescription);
+            
+            if (status) {
+                const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                status.innerHTML = `✅ ${time} | Next: 60s`;
+            }
+        } else {
+            output.innerHTML = `
+                <div style="color:#ef4444; padding:10px; background:rgba(239,68,68,0.1); border-radius:8px;">
+                    <strong>Error:</strong> ${data.error || 'Unknown error'}
+                </div>
+            `;
+        }
+        
+    } catch (err) {
+        console.error("Frame processing error:", err);
+        output.innerHTML = `
+            <div style="color:#ef4444; padding:10px; background:rgba(239,68,68,0.1); border-radius:8px;">
+                <strong>Network Error:</strong> ${err.message}
+            </div>
+        `;
+    }
+    
+    // Schedule next frame after 60 seconds
+    if (sending) {
+        setTimeout(processFrame, MIN_INTERVAL);
+    }
+}
+
+// Update the UI with analysis results
+function updateUI(data) {
+    const output = document.getElementById("live-output");
+    const detectionList = document.getElementById("detection-list");
+    const audioText = document.getElementById("audio-text");
+    
+    // Update detected objects list
+    detectionList.innerHTML = "";
+    if (data.detectedObjects && data.detectedObjects.length > 0) {
+        data.detectedObjects.forEach(obj => {
+            const li = document.createElement("li");
+            li.style.cssText = `
+                margin: 8px 0;
+                padding: 10px 12px;
+                background: ${obj.warning ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)'};
+                border-radius: 8px;
+                border-left: 4px solid ${obj.warning ? '#ef4444' : '#22c55e'};
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            `;
+            
+            const warningIcon = obj.warning ? ' ⚠️' : '';
+            li.innerHTML = `
+                <div>
+                    <strong>${obj.name}</strong>${warningIcon}<br>
+                    <small style="color: #64748b; font-size: 11px;">Position: ${obj.position}</small>
+                </div>
+                <span style="
+                    background: rgba(0,0,0,0.1); 
+                    padding: 2px 8px; 
+                    border-radius: 12px;
+                    font-size: 12px;
+                ">
+                    ${Math.round(obj.confidence * 100)}%
+                </span>
+            `;
+            detectionList.appendChild(li);
+        });
+    }
+    
+    // Update audio description text
+    audioText.textContent = data.audioDescription || "No description available";
+    
+    // Update live output display
+    const isRealAI = data.source && data.source.includes("real");
+    const badgeColor = isRealAI ? '#22c55e' : '#f59e0b';
+    const badgeText = isRealAI ? 'Real AI' : 'System Message';
+    
+    output.innerHTML = `
+        <div style="
+            padding: 15px; 
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(168, 85, 247, 0.1)); 
+            border-radius: 10px; 
+            margin-bottom: 15px;
+            border-left: 4px solid ${badgeColor};
+        ">
+            <div style="
+                display: inline-block; 
+                background: ${badgeColor}; 
+                color: white; 
+                padding: 2px 8px; 
+                border-radius: 4px; 
+                font-size: 12px; 
+                margin-bottom: 10px;
+            ">
+                ${badgeText}
+            </div>
+            <div style="font-size: 16px; line-height: 1.5;">${data.audioDescription}</div>
+        </div>
+    `;
+    
+    // Show results section
+    document.getElementById("results-display").style.display = "block";
+}
+
+// Text-to-speech function
+function speakDescription(text) {
+    if ('speechSynthesis' in window && text && text.trim()) {
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        
+        // Try to get a good voice
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0) {
+            // Prefer English voices
+            const englishVoice = voices.find(voice => 
+                voice.lang.includes('en') && !voice.lang.includes('GB')
+            ) || voices[0];
+            utterance.voice = englishVoice;
+        }
+        
+        window.speechSynthesis.speak(utterance);
+    }
+}
+
+// Stop the simulation
+function stopSimulation() {
+    sending = false;
+    
+    // Stop camera testing interval
+    if (cameraTestInterval) {
+        clearInterval(cameraTestInterval);
+        cameraTestInterval = null;
+    }
+    
+    // Stop camera stream
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => {
+            track.stop();
+        });
+        videoStream = null;
+    }
+    
+    // Clear video element
+    const video = document.getElementById("camera");
+    if (video) {
+        video.style.display = "none";
+        video.srcObject = null;
+    }
+    
+    // Update UI
+    const status = document.getElementById("live-status");
+    if (status) {
+        status.style.display = "none";
+    }
+    
+    const output = document.getElementById("live-output");
+    if (output) {
+        output.innerHTML = `
+            <div style="color:#94a3b8; text-align:center; padding:30px;">
+                <div style="font-size:18px; margin-bottom:10px;">Vision Assist Stopped</div>
+                <small>Click "Start Vision Assist" to begin real-time analysis</small>
+            </div>
+        `;
+    }
+    
+    // Hide loading and results
+    document.getElementById("loading-indicator").style.display = "none";
+    document.getElementById("results-display").style.display = "none";
+    
+    // Stop any speech
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+    }
+    
+    console.log("Simulation stopped");
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("VisionAssist initialized");
+    
+    // Add Stop button after Start button
+    const startButton = document.querySelector('button[onclick="startSimulation()"]');
+    if (startButton) {
+        // Create Stop button
+        const stopButton = document.createElement('button');
+        stopButton.textContent = '🛑 Stop Vision Assist';
+        stopButton.className = 'action-button';
+        stopButton.style.cssText = `
+            background-color: #dc2626;
+            color: white;
+            margin-top: 10px;
+            width: 100%;
+            padding: 12px;
+            font-weight: bold;
+        `;
+        stopButton.onclick = stopSimulation;
+        
+        // Create Test Connection button
+        const testButton = document.createElement('button');
+        testButton.textContent = '🔗 Test API Connection';
+        testButton.className = 'action-button';
+        testButton.style.cssText = `
+            background-color: #f97316;
+            color: white;
+            margin-top: 10px;
+            width: 100%;
+            padding: 12px;
+            font-weight: bold;
+        `;
+        testButton.onclick = async function() {
+            try {
+                const response = await fetch('/api/test-connection');
+                const data = await response.json();
+                alert(`API Status: ${data.status}\n\n${data.message}`);
+            } catch (err) {
+                alert('Test failed: ' + err.message);
+            }
+        };
+        
+        // Insert buttons after start button
+        startButton.parentNode.insertBefore(testButton, startButton.nextSibling);
+        startButton.parentNode.insertBefore(stopButton, testButton.nextSibling);
+    }
+    
+    // Initialize TTS button
+    const ttsButton = document.getElementById('tts-play-btn');
+    if (ttsButton) {
+        ttsButton.addEventListener('click', function() {
+            const audioText = document.getElementById('audio-text');
+            if (audioText && audioText.textContent.trim()) {
+                speakDescription(audioText.textContent);
+            }
+        });
+    }
+    
+    // Load speech synthesis voices
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.getVoices();
+    }
+    
+    // Add camera debug section
+    const cameraSection = document.querySelector('.input-controls');
+    if (cameraSection) {
+        const debugDiv = document.createElement('div');
+        debugDiv.id = 'camera-debug';
+        debugDiv.style.cssText = `
+            background: rgba(59, 130, 246, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #64748b;
+            display: none;
+        `;
+        debugDiv.innerHTML = '<strong>Camera Status:</strong> Not started';
+        cameraSection.appendChild(debugDiv);
+    }
+});
+
+// Helper function to list available cameras (for debugging)
+async function listCameras() {
+    try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cameras = devices.filter(device => device.kind === 'videoinput');
+        
+        console.log(`Found ${cameras.length} camera(s):`);
+        cameras.forEach((cam, index) => {
+            console.log(`${index + 1}. ${cam.label || 'Unnamed Camera'} (ID: ${cam.deviceId})`);
+        });
+        
+        return cameras;
+    } catch (error) {
+        console.error("Error listing cameras:", error);
+        return [];
+    }
+}
+// Add this debugging function
+function debugCameraBrightness() {
+    const video = document.getElementById("camera");
+    if (!video || !video.srcObject) {
+        console.log("❌ No camera active");
+        return;
+    }
+    
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = 100;
+    canvas.height = 100;
+    ctx.drawImage(video, 0, 0, 100, 100);
+    
+    const imageData = ctx.getImageData(0, 0, 100, 100);
+    let brightness = 0;
+    
+    for (let i = 0; i < imageData.data.length; i += 4) {
+        brightness += (imageData.data[i] + imageData.data[i+1] + imageData.data[i+2]) / 3;
+    }
+    brightness /= (imageData.data.length / 4);
+    
+    console.log(`📊 Camera Debug: ${Math.round(brightness)}/255 brightness`);
+    console.log(`📊 Video readyState: ${video.readyState}`);
+    console.log(`📊 Video dimensions: ${video.videoWidth}x${video.videoHeight}`);
+    
+    // Update UI with debug info
+    const output = document.getElementById("live-output");
+    if (output) {
+        output.innerHTML += `
+            <div style="color:#64748b; padding:10px; background:rgba(100,100,100,0.1); border-radius:8px; margin-top:10px;">
+                <strong>Debug Info:</strong><br>
+                Brightness: ${Math.round(brightness)}/255 (${Math.round((brightness/255)*100)}%)<br>
+                Video: ${video.videoWidth || 0}×${video.videoHeight || 0}<br>
+                Ready State: ${video.readyState}
+            </div>
+        `;
+    }
+}
+
+// Call this after starting camera
+// Add to your startSimulation() function after video.play():
+setTimeout(debugCameraBrightness, 2000);
+
+</script>
+<script>
+function openMapMode() {
+    window.location.href = "/map";
+}
+</script>
+
+{% endblock %}

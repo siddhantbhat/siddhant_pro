@@ -1,0 +1,29 @@
+{% extends "Base.html" %}
+
+{% block content %}
+    <h2>About VisionAssist AI Glasses</h2>
+    <p>
+      VisionAssist uses Artificial Intelligence to describe the environment to blind and visually impaired users in real time.
+      Through computer vision and voice synthesis, it narrates what it "sees".
+    </p>
+    <h3>Our Mission</h3>
+    <p>We aim to create emotional and intelligent AI technology that restores independence and confidence.</p>
+  
+{% endblock %}
+                <button id="startCameraBtn" class="action-button" 
+                        style="background-color: var(--color-secondary); color: var(--color-text-light); border: none;">
+                    Start Camera
+                </button>
+                <input type="file" id="uploadVideoInput" accept="video/*" 
+                       style="margin-top: 1rem;"/>
+            </div>
+            <video id="videoFeed" autoplay muted></video>
+        </div>
+        
+        <!-- OUTPUT SIDE -->
+        <div>
+            <h3 style="color: var(--color-primary); margin-bottom: 1.5rem; font-weight: 700;">2. Processed Output</h3>
+            <div class="output-box" id="outputBox">
+                <p style="color: var(--color-text-dim); text-align: center;">
+                    Processed video output will appear here.
+                </p>

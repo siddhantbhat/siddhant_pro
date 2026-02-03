@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GPS Detector</title>
+
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+    <style>
+        body { margin: 0; font-family: Arial; }
+        #map { height: 100vh; width: 100%; }
+
+        #voiceBtn {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 20px;
+            font-size: 16px;
+            background: black;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+<button id="voiceBtn">🎙️ Where am I?</button>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+let map, marker, lastPosition;
+
+// 🔊 Speak
+function speak(text) {
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.rate = 0.95;
+    speechSynthesis.speak(msg);
+}
+
+// 🗺️ Init map
+function initMap(lat, lon) {
+    map = L.map("map").setView([lat, lon], 17);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap"
+    }).addTo(map);
+
+    marker = L.marker([lat, lon]).addTo(map)
+        .bindPopup("📍 You are here")
+        .openPopup();
+}
+
+// 🔁 Update marker (live movement)
+function updatePosition(lat, lon) {
+    if (!marker) {
+        initMap(lat, lon);
+    } else {
+        marker.setLatLng([lat, lon]);
+        map.setView([lat, lon]);
+    }
+}
+
+// 📍 Get REAL GPS location
+function startGPS() {
+    if (!navigator.geolocation) {
+        alert("Geolocation not supported");
+        return;
+    }
+
+    navigator.geolocation.watchPosition(
+        (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            const acc = Math.round(pos.coords.accuracy);
+
+            lastPosition = { lat, lon, acc };
+            updatePosition(lat, lon);
+        },
+        (err) => {
+            alert("Location permission denied");
+        },
+        {
+            enableHighAccuracy: true,
+            maximumAge: 0,
+            timeout: 10000
+        }
+    );
+}
+
+// 🎤 Voice recognition
+const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+const recognizer = new SpeechRecognition();
+recognizer.lang = "en-US";
+
+document.getElementById("voiceBtn").onclick = () => {
+    recognizer.start();
+};
+
+recognizer.onresult = () => {
+    if (lastPosition) {
+        speak(`Your location accuracy is ${lastPosition.acc} meters`);
+    } else {
+        speak("Waiting for GPS signal");
+    }
+};
+
+startGPS();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} VisionAssist AI {% endblock %}</title>
+    
+    <!-- 💥 CRITICAL FIX: Add the CSS link here -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+</head>
+<body>
+    <div>
+         <nav class="navbar">
+      <div class="logo">VisionAssist</div>
+      <ul class="nav-links" id="navLinks">
+        <li><a href={{ url_for('main.home') }}>Home</a></li>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category,message in messages %}
+            <h2>{{message}}</h2>
+            {% endfor%}
+        {% endif %}
+        {% endwith %}
+        <li><a href={{ url_for('main.about') }}>About</a></li>
+        <li><a href="#">Demo</a></li>
+        <li><a href={{ url_for('main.contact') }}>Contact</a></li>
+        <li><a href="#" class="get-started">Get Started</a></li>
+      </ul>
+      <div class="menu-icon" id="menuIcon" onclick="toggleMenu()">☰</div>
+    </nav>
+    </div>
+
+    
+ 
+    <main style="padding-top: 6rem;"> <!-- FIX: Added <main> tag with padding to push content below the fixed navbar -->
+        <div class="content-wrapper"> <!-- NEW: Wrapper for centering and max-width -->
+            {%block content %} {% endblock %}
+        </div>
+    </main>
+    
+   
+</body>
+ <footer>
+    <p>© 2025 VisionAssist AI | Designed with 💡 for accessibility</p>
+  </footer>
+</html>
